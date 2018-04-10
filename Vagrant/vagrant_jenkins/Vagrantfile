@@ -29,7 +29,7 @@ sudo update-java-alternatives -l
 echo "test"
 SCRIPT
  
-node = [
+nodes = [
   { :hostname => 'Jenkinssrv', :ip => '192.168.0.42', :box => 'ubuntu/xenial64', :ram => 2000, 
   :port => 8000, 
   :provision => $setupJenkins},

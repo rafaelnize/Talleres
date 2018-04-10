@@ -1,0 +1,73 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# official box at:  https://app.vagrantup.com/ubuntu/boxes/xenial64
+
+nodes = [
+  { :hostname => 'Jenkinssrv', :ip => '192.168.0.42', :box => 'xenial64', :ram => 2000 },
+  { :hostname => 'Tomcatsrv',  :ip => '192.168.0.43', :box => 'xenial64', :ram => 512 }
+]
+
+$bootstrap=<<SCRIPT
+sudo apt-get update -y
+sudo dpkg --configure -a
+sudo apt-mark hold grub-pc
+sudo apt-mark hold grub
+sudo apt-get install -y ntpdate
+sudo ntpdate pool.ntp.org
+sudo apt-get install -y ntp
+echo "server 0.ubuntu.pool.ntp.org" >> /etc/ntp.conf
+echo "server 1.ubuntu.pool.ntp.org" >> /etc/ntp.conf
+echo "server 2.ubuntu.pool.ntp.org" >> /etc/ntp.conf
+echo "server 3.ubuntu.pool.ntp.org" >> /etc/ntp.conf
+echo "NTP setup has been finished..."
+ntpq -p
+sudo service ntp restart
+SCRIPT
+
+$setupJenkins=<<SCRIPT
+sudo apt-get -y update
+sudo apt-get install -y default-jdk
+wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt-get install -y jenkins
+SCRIPT
+
+$setupTomcat=<<SCRIPT
+sudo apt-get -y update
+sudo apt-get install default-jdk
+sudo groupadd tomcat
+sudo useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+curl -O http://apache.mirrors.ionfish.org/tomcat/tomcat-8/v8.5.30/bin/apache-tomcat-8.5.30.tar.gz
+sudo mkdir /opt/tomcat
+sudo tar xzvf apache-tomcat-8*tar.gz -C /opt/tomcat --strip-components=1
+cd /opt/tomcat
+sudo chgrp -R tomcat /opt/tomcat
+sudo chmod -R g+r conf
+sudo chmod g+x conf
+sudo chown -R tomcat webapps/ work/ temp/ logs/
+sudo update-java-alternatives -l
+
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  nodes.each do |node|
+    config.vm.define node[:hostname] do |nodeconfig|
+      nodeconfig.vm.box = node[:box]
+      nodeconfig.vm.hostname = node[:hostname] + ".box"
+      nodeconfig.vm.network :private_network, ip: node[:ip]
+      memory = node[:ram] ? node[:ram] : 256;
+      nodeconfig.vm.provider :virtualbox do |vb|
+        vb.customize [
+          "modifyvm", :id,
+          "--cpuexecutioncap", "100",
+          "--memory", memory.to_s,
+        ]
+      end
+    end
+    if node[:hostname] = 'Jenkinssrv'
+       config.vm.provision :shell, inline: $setupJenkins
+    else 
+       config.vm.provision :shell, inline: $setupTomcat
+  end
+end

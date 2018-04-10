@@ -63,7 +63,7 @@ Vagrant.configure("2") do |config|
           "--cpuexecutioncap", "100",
           "--memory", memory.to_s,
         ]
-        end
+      end
     if node[:hostname] = 'Jenkinssrv'
         config.vm.provision :shell, inline: $setupJenkins
     else 

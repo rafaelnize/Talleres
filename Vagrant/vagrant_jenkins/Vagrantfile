@@ -34,7 +34,7 @@ nodes = [
   :port => 8000, 
   :provision => $setupJenkins},
   { :hostname => 'Tomcatssrv', :ip => '192.168.0.43', :box => 'ubuntu/xenial64', :ram => 514, 
-  :port => 8000, 
+  :port => 8080, 
   :provision => $setupTomcat}
 ]
 

@@ -54,5 +54,6 @@ Vagrant.configure("2") do |config|
       end
       nodeconfig.vm.provision :shell, inline: $setupJenkins
       nodeconfig.vm.network "forwarded_port", guest: 8000, host: node[:port] 
-    end       
+    end    
+  end   
 end

@@ -4,15 +4,23 @@
 # official box at:  https://app.vagrantup.com/ubuntu/boxes/xenial64
 
 $setupJenkins=<<SCRIPT
+echo "Running setup jenkins!!!!"
 sudo apt-get -y update
 sudo apt-get install -y default-jdk
 wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
 sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
 sudo apt-get -y update
 sudo apt-get install -y jenkins
+cd /opt
+wget -O http://www-eu.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz
+sudo tar -xzvf apache-maven-3.5.3-bin.tar.gz
+echo $JAVA_HOME
+export PATH=/opt/apache-maven-3.5.3/bin:$PATH
+echo "PATH=/opt/apache-maven-3.5.3/bin:$PATH" > /etc/environment
 SCRIPT
 
 $setupTomcat=<<SCRIPT
+echo "Running setup Tomcat!!!!"
 sudo apt-get -y update
 sudo apt-get install -y default-jdk
 sudo groupadd tomcat

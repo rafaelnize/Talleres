@@ -12,7 +12,7 @@ sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sour
 sudo apt-get -y update
 sudo apt-get install -y jenkins
 cd /opt
-wget -O http://www-eu.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz
+wget http://www-eu.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz
 sudo tar -xzvf apache-maven-3.5.3-bin.tar.gz
 echo $JAVA_HOME
 export PATH=/opt/apache-maven-3.5.3/bin:$PATH

@@ -1,0 +1,78 @@
+FROM ubuntu:16.04
+
+### solve some problems with shell commands ###
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+#### Packages and dependencies ###################
+RUN apt-get update -y
+RUN apt-get install -y git libffi-dev nano python python-dev python-pip python-software-properties
+RUN apt-get install -y libssl-dev \
+    ssh-agent-filter \
+    software-properties-common \
+    unzip \
+    wget \
+    build-essential \
+    curl \
+    vim \
+    zip \
+    ntpdate \
+    groff
+
+###### Ansible and dependencies ############
+RUN apt-add-repository ppa:ansible/ansible
+RUN pip install --upgrade ndg-httpsclient
+RUN pip install --upgrade pip
+RUN pip install \
+   awscli \
+   boto \
+   boto3 \
+   docker-py \
+   httplib2 \
+   Jinja2 \
+   paramiko \
+   netaddr
+
+
+RUN pip install --upgrade awscli && \
+    pip install --upgrade docker-py
+#### Update Ansible to the latest version #######
+RUN pip install -U git+https://github.com/ansible/ansible
+#### AWS ssh key for
+RUN mkdir -p /etc/ansible && mkdir -p /etc/ansible/keys
+#RUN ln -s /etc/ansible/ansible-playbooks/deploy/ansible /etc/ansible/scripts
+#RUN cd /etc/ansible && git clone git@bitbucket.org:arquiteturacloudteam/ansible-playbooks.git && cd ansible-playbooks && cp ansible.cfg /etc/ansible/
+#RUN cd /etc/ansible/ansible-playbooks && cp -R inventory /etc/ansible/ && cp -R inventory_packer /etc/ansible/
+#RUN cd /etc/ansible/ansible-playbooks/deploy/ansible/ && cp -R group_vars /etc/ansible
+#RUN ln -s /etc/ansible/ansible-playbooks/deploy/ansible ansible
+
+# Installing Golang and CFSSL#
+RUN cd /tmp; wget https://storage.googleapis.com/golang/go1.8.1.linux-amd64.tar.gz && \
+    tar -C /usr/local -zxvf go1.8.1.linux-amd64.tar.gz && \
+    export PATH=$PATH:/usr/local/go/bin
+
+#### Terraform  ###############
+RUN cd /tmp
+RUN cd /tmp && wget https://releases.hashicorp.com/terraform/0.9.7/terraform_0.9.7_linux_amd64.zip
+RUN cd /tmp && mv terraform_0.9.7_linux_amd64.zip terraform_install.zip && unzip terraform_install.zip -d /usr/local/bin/
+RUN terraform version
+RUN mkdir -p /root/terraform/env_vars && mkdir /root/terraform/environments
+
+## Packer ##
+RUN cd /tmp
+RUN cd /tmp && wget https://releases.hashicorp.com/packer/1.1.2/packer_1.1.2_linux_amd64.zip
+RUN cd /tmp && mv packer_1.1.2_linux_amd64.zip packer.zip && unzip packer.zip -d /usr/local/bin/
+RUN packer -v
+
+
+
+#RUN chmod +x /root/testTerraformScript.sh && \
+#                 chmod +x /root/storeTerraformStateToS3.sh && \
+#                 ln -s /root/testTerraformScript.sh /testTerraformScript.sh && \
+#                 ln -s /root/storeTerraformStateToS3.sh /storeTerraformStateToS3.sh
+
+
+RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /root/.profile; source /root/.profile
+RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /root/.bashrc; source /root/.bashrc
+#RUN echo 'GOPATH=/usr/local/go
+RUN  export PATH=$PATH:/usr/local/go/bin; go get -u github.com/cloudflare/cfssl/cmd/cfssl && \
+     export PATH=$PATH:/usr/local/go/bin; go get -u github.com/cloudflare/cfssl/cmd/...

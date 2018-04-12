@@ -1,0 +1,53 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+$bootstrap=<<SCRIPT
+sudo apt-get update -y
+sudo dpkg --configure -a
+sudo apt-mark hold grub-pc
+sudo apt-mark hold grub
+sudo apt-get upgrade -y
+sudo apt-get -y install wget yamllint
+#wget --no-check-certificate -qO- https://get.docker.com/ | sh
+gpasswd -a vagrant docker
+sudo apt-get -y install python-pip
+sudo pip install pip --upgrade
+sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update -y
+sudo apt-get install docker-ce -y
+sudo apt-get install -y ntpdate
+sudo ntpdate pool.ntp.org
+sudo apt-get install -y ntp
+echo "server 0.ubuntu.pool.ntp.org" >> /etc/ntp.conf
+echo "server 1.ubuntu.pool.ntp.org" >> /etc/ntp.conf
+echo "server 2.ubuntu.pool.ntp.org" >> /etc/ntp.conf
+echo "server 3.ubuntu.pool.ntp.org" >> /etc/ntp.conf
+echo "NTP setup has been finished..."
+ntpq -p
+sudo service ntp restart
+sudo docker run hello-world
+sudo pip install pip --upgrade
+COMPOSE_VERSION=`git ls-remote https://github.com/docker/compose | grep refs/tags | grep -oP "[0-9]+\.[0-9][0-9]+\.[0-9]+$" | tail -n 1`
+sudo sh -c "curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` |tee /usr/local/bin/docker-compose"
+sudo chmod +x /usr/local/bin/docker-compose
+sudo pip install -U docker-compose --upgrade
+service docker restart
+docker-compose --version
+sudo usermod -a -G docker vagrant
+SCRIPT
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+     config.vm.box = "bento/ubuntu-16.04"
+     if Vagrant.has_plugin?("vagrant-cachier")
+        config.cache.scope = :machine
+     end
+     config.vm.network "private_network", ip: "192.168.33.15"
+     config.vm.provider "virtualbox" do |vb|
+        vb.customize ["modifyvm", :id, "--memory", "1500"]
+     end
+     config.vm.provision :shell, inline: $bootstrap
+end
